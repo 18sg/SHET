@@ -4,6 +4,9 @@ import commands
 from id_generator import IdGeneratorMixin
 
 from shet import ShetProtocol
+from shet.command_runner import command
+
+
 
 class ShetServerProtocol(ShetProtocol):
 
@@ -20,17 +23,16 @@ class ShetServerProtocol(ShetProtocol):
 		print msg
 		return "you said: %s" % msg
 
+	@command("test")
 	def cmd_test(self):
 		d = self.send_command_with_callback("foo", "hello")
 		return d.addCallback(self.test_cb)
 		
 
+	@command("test_error")
 	def cmd_test_error(self):
 		raise Exception("Oh Shit!")
 
-
-	commands = {"test" : cmd_test,
-	            "test_error" : cmd_test_error}
 
 
 class ShetServerFactory(Factory):

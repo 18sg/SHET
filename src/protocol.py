@@ -4,13 +4,16 @@ from twisted.internet.defer import Deferred, maybeDeferred
 import json
 
 from shet import IdGeneratorMixin
-
+from shet.command_runner import CommandRunnerMixin, command
 import commands
 
 
-class ShetProtocol(LineReceiver, IdGeneratorMixin):
+class ShetProtocol(LineReceiver,
+                   IdGeneratorMixin,
+                   CommandRunnerMixin):
 
 	def __init__(self, *args, **kwargs):
+		CommandRunnerMixin.__init__(self)
 		self.waiting_for_return = {}
 
 
@@ -25,7 +28,7 @@ class ShetProtocol(LineReceiver, IdGeneratorMixin):
 			if command_name == commands._return:
 				self.cmd_return(return_id, *args)
 			else:
-				d = maybeDeferred(self.commands[command_name], self, *args)
+				d = maybeDeferred(self.get_command(command_name), self, *args)
 				d.addCallback(self.command_complete, return_id)
 				d.addErrback(self.command_fail, return_id)
 
@@ -39,7 +42,6 @@ class ShetProtocol(LineReceiver, IdGeneratorMixin):
 	def command_fail(self, e, return_id):
 		self.send_command(return_id, commands._return, 1, repr(e))
 		
-
 
 	def send_command(self, return_id, name, *args):
 		command = (return_id, name) + args
@@ -65,5 +67,3 @@ class ShetProtocol(LineReceiver, IdGeneratorMixin):
 			d.callback(retval)
 		else:
 			d.errback(retval)
-
-	commands = {}

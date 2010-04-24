@@ -1,4 +1,3 @@
-_return = "return"
 mkprop = "mkprop"
 mkvar = "mkvar"
 rmprop = "rmprop"
