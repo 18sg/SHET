@@ -27,6 +27,10 @@ class ShetServerProtocol(ShetProtocol):
 	def cmd_test(self):
 		d = self.send_command_with_callback("foo", "hello")
 		return d.addCallback(self.test_cb)
+
+	@command("test_block")
+	def cmd_test_blocking(self):
+		return "See?"
 		
 
 	@command("test_error")
