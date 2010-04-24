@@ -1,12 +1,12 @@
 #!/usr/bin/env python
-from shet.server import ShetFactory
+from shet.server import ShetServerFactory
 from twisted.internet import reactor
 
 
 def main():
 	port = 11235
 
-	reactor.listenTCP(port, ShetFactory())
+	reactor.listenTCP(port, ShetServerFactory())
 	print "Running on port %i..." % port
 	reactor.run()
 

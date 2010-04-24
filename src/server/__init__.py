@@ -1,2 +1,2 @@
-from server import ShetFactory, ShetProtocol
+from server import ShetServerFactory, ShetServerProtocol
 import commands
