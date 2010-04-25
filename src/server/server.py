@@ -1,11 +1,12 @@
 from twisted.internet.protocol import Factory
+from twisted.internet.defer import Deferred
 
 import commands
-from id_generator import IdGeneratorMixin
 
 from shet import ShetProtocol
 from shet.command_runner import command
 
+from shet.server import file_system
 
 
 class ShetServerProtocol(ShetProtocol):
@@ -13,30 +14,47 @@ class ShetServerProtocol(ShetProtocol):
 	def connectionMade(self):
 		self.factory.connections.append(self)
 		self.connected = True
+		self.on_connection_lost = Deferred()
+
+		self.fs_nodes = []
 
 	def connectionLost(self, reason):
 		self.factory.connections.remove(self)
 		self.connected = False
 
+		for node in self.fs_nodes:
+			node.delete()
 
-	def test_cb(self, msg):
-		print msg
-		return "you said: %s" % msg
+	@command(commands.mkprop)
+	def cmd_mkprop(self, path):
+		self.fs_nodes.append(file_system.Property(self.factory.fs,
+		                                          path,
+		                                          self))
 
-	@command("test")
-	def cmd_test(self):
-		d = self.send_command_with_callback("foo", "hello")
-		return d.addCallback(self.test_cb)
+	@command(commands.rmprop)
+	def cmd_rmprop(self, path):
+		node = self.factory.fs.get_node(path)
+		assert node.owner == self
+		node.delete()
 
-	@command("test_block")
-	def cmd_test_blocking(self):
-		return "See?"
-		
+	@command(commands.get)
+	def cmd_get(self, path):
+		node = self.factory.fs.get_node(path)
+		return node.get()
 
-	@command("test_error")
-	def cmd_test_error(self):
-		raise Exception("Oh Shit!")
+	@command(commands.set)
+	def cmd_set(self, path, value):
+		node = self.factory.fs.get_node(path)
+		node.set(value)
 
+
+
+
+	def send_get(self, path):
+		return self.send_command_with_callback(commands.getprop, path)
+
+	def send_set(self, path, value):
+		return self.send_command_with_callback(commands.setprop, path, value)
 
 
 class ShetServerFactory(Factory):
@@ -44,3 +62,4 @@ class ShetServerFactory(Factory):
 
 	def __init__(self):
 		self.connections = []
+		self.fs = file_system.FileSystem()
