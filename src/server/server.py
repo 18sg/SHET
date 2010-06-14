@@ -1,7 +1,7 @@
 from twisted.internet.protocol import Factory
 from twisted.internet.defer import Deferred
 
-import commands
+from shet import commands
 
 from shet import ShetProtocol
 from shet.command_runner import command
