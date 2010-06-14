@@ -17,10 +17,9 @@ class ShetClientProtocol(ShetProtocol):
 		"""Set up the connection - initialise all properties, events etc.
 		and send all queued items.
 		"""
-		print "connected"
 		self.factory.resetDelay()
 		self.factory.client = self
-
+		self.factory.on_connect()
 		# Set up properties
 		for prop_path in self.factory.properties:
 			self.send_mkprop(prop_path)
@@ -60,8 +59,8 @@ class ShetClientProtocol(ShetProtocol):
 
 	def connectionLost(self, reason):
 		"""Called on disconnect."""
-		print "disconnected"
 		self.factory.client = None
+		self.factory.on_disconnect()
 
 	# Lots of boring code.
 
@@ -140,6 +139,17 @@ class ShetClient(ReconnectingClientFactory):
 		self.raise_queue = []
 		self.call_queue = []
 		self.client = None
+
+
+	def on_connect(self):
+		"""Called when the client connects to the server.
+		"""
+		pass
+
+	def on_disconnect(self):
+		"""Called when the client disconnects from the server.
+		"""
+		pass
 
 
 	def add_property(self, path, set_callback, get_callback):
@@ -286,10 +296,7 @@ class ShetClient(ReconnectingClientFactory):
 
 
 	def _get_property(self, path):
-		try:
-			return self.properties[path].get()
-		except Exception, e:
-			print e
+		return self.properties[path].get()
 
 	def _set_property(self, path, value):
 		return self.properties[path].set(value)
