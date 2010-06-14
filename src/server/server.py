@@ -46,7 +46,7 @@ class ShetServerProtocol(ShetProtocol):
 	@command(commands.set)
 	def cmd_set(self, path, value):
 		node = self.factory.fs.get_node(path)
-		node.set(value)
+		return node.set(value)
 
 	@command(commands.mkvar)
 	def cmd_mkvar(self, path):
