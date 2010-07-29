@@ -132,9 +132,9 @@ class Event(Node):
 	def ignore(self, watcher):
 		self.watchers.remove(watcher)
 
-	def _raise(self):
+	def _raise(self, *args):
 		for watcher in self.watchers:
-			watcher.send_event(self.path)
+			watcher.send_event(self.path, *args)
 
 	def delete(self):
 		Node.delete(self)
