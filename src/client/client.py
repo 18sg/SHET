@@ -93,7 +93,7 @@ class ShetClientProtocol(ShetProtocol):
 
 	# Actions
 	def send_mkaction(self, path):
-		return self.send_command_with_callback(commands.action, path)
+		return self.send_command_with_callback(commands.mkaction, path)
 	def send_rmaction(self, path):
 		return self.send_command_with_callback(commands.rmaction, path)
 
