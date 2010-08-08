@@ -118,7 +118,7 @@ class ShetClientProtocol(ShetProtocol):
 
 	@command(commands.docall)
 	def cmd_docall(self, path, *args):
-		self.factory.actions[path].call(*args)
+		return self.factory.actions[path].call(*args)
 
 
 
@@ -369,4 +369,4 @@ class Action(Node):
 		self.callback = callback
 
 	def call(self, *args):
-		self.callback(*args)
+		return self.callback(*args)

@@ -88,9 +88,9 @@ class ShetServerProtocol(ShetProtocol):
 		                                        self))
 
 	@command(commands.call)
-	def cmd_call(self, path):
+	def cmd_call(self, path, *args):
 		node = self.factory.fs.get_node(path)
-		node.call()
+		return node.call(*args)
 
 		
 
@@ -107,8 +107,8 @@ class ShetServerProtocol(ShetProtocol):
 	def send_eventdeleted(self, path):
 		return self.send_command_with_callback(commands.eventdeleted, path)
 
-	def send_docall(self, path):
-		return self.send_command_with_callback(commands.docall, path)
+	def send_docall(self, path, *args):
+		return self.send_command_with_callback(commands.docall, path, *args)
 
 
 class ShetServerFactory(Factory):

@@ -2,6 +2,7 @@ from twisted.protocols.basic import LineReceiver
 from twisted.internet.defer import Deferred, maybeDeferred
 
 import json
+import traceback
 
 from shet import IdGeneratorMixin
 from shet.command_runner import CommandRunnerMixin, command
