@@ -67,9 +67,9 @@ class ShetServerProtocol(ShetProtocol):
 		node.delete()
 
 	@command(commands._raise)
-	def cmd_raise(self, path):
+	def cmd_raise(self, path, *args):
 		node = self.factory.fs.get_node(path)
-		node._raise()
+		node._raise(*args)
 
 	@command(commands.watch)
 	def cmd_watch(self, path):
@@ -101,8 +101,8 @@ class ShetServerProtocol(ShetProtocol):
 	def send_set(self, path, value):
 		return self.send_command_with_callback(commands.setprop, path, value)
 
-	def send_event(self, path):
-		return self.send_command_with_callback(commands.event, path)
+	def send_event(self, path, *args):
+		return self.send_command_with_callback(commands.event, path, *args)
 
 	def send_eventdeleted(self, path):
 		return self.send_command_with_callback(commands.eventdeleted, path)

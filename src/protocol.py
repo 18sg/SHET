@@ -45,6 +45,9 @@ class ShetProtocol(LineReceiver,
 		
 
 	def send_command(self, return_id, name, *args):
+		if return_id is None:
+			return_id = self.get_id()
+		
 		command = (return_id, name) + args
 		self.sendLine(json.dumps(command))
 
