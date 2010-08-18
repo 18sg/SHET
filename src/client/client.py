@@ -118,7 +118,7 @@ class ShetClientProtocol(ShetProtocol):
 
 	@command(commands.docall)
 	def cmd_docall(self, path, *args):
-		self.factory.actions[path].call(*args)
+		return self.factory.actions[path].call(*args)
 
 
 
@@ -166,7 +166,7 @@ class ShetClient(ReconnectingClientFactory):
 		prop = Property(path, set_callback, get_callback)
 		self.properties[path] = prop
 		if self.client is not None:
-			self.connector.send_mkprop(path)
+			self.client.send_mkprop(path)
 		return prop
 		
 	def remove_property(self, prop):
@@ -175,7 +175,7 @@ class ShetClient(ReconnectingClientFactory):
 		"""
 		del self.properties[prop.path]
 		if self.client is not None:
-			self.connector.send_rmprop(prop.path)
+			self.client.send_rmprop(prop.path)
 		
 
 	def add_event(self, path):
@@ -199,7 +199,7 @@ class ShetClient(ReconnectingClientFactory):
 		"""
 		del self.events[path]
 		if self.client is not None:
-			self.connector.send_rmevent(path)
+			self.client.send_rmevent(path)
 		
 	
 	def watch_event(self, path, callback, delete_callback=lambda:None):
@@ -369,4 +369,4 @@ class Action(Node):
 		self.callback = callback
 
 	def call(self, *args):
-		self.callback(*args)
+		return self.callback(*args)

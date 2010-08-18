@@ -2,6 +2,7 @@ from twisted.protocols.basic import LineReceiver
 from twisted.internet.defer import Deferred, maybeDeferred
 
 import json
+import traceback
 
 from shet import IdGeneratorMixin
 from shet.command_runner import CommandRunnerMixin, command
@@ -44,6 +45,9 @@ class ShetProtocol(LineReceiver,
 		
 
 	def send_command(self, return_id, name, *args):
+		if return_id is None:
+			return_id = self.get_id()
+		
 		command = (return_id, name) + args
 		self.sendLine(json.dumps(command))
 

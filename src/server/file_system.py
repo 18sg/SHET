@@ -147,5 +147,5 @@ class Action(Node):
 	type = "action"
 
 	def call(self, *args):
-		self.owner.send_docall(self.path, *args)
+		return self.owner.send_docall(self.path, *args)
 

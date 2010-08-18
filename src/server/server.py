@@ -92,7 +92,6 @@ class ShetServerProtocol(ShetProtocol):
 		node = self.factory.fs.get_node(path)
 		node.call(*args)
 
-		
 
 
 	def send_get(self, path):
