@@ -5,6 +5,29 @@ from twisted.internet import reactor
 from shet import commands
 from shet import ShetProtocol
 from shet.command_runner import command
+import os.path
+from types import MethodType
+
+
+
+class shet_action(object):
+	def __init__(self, f):
+		self.f = f
+	
+	def __call__(self, *args, **kwargs):
+		return self.f(*args, **kwargs)
+
+class shet_property(object):
+	def __init__(self, f):
+		self.get = f
+		self.set_f = None
+	
+	def __call__(self, *args, **kwargs):
+		return self.get(*args, **kwargs)
+	
+	def set(self, f):
+		self.set_f = f
+		return f
 
 
 
@@ -128,7 +151,9 @@ class ShetClient(ReconnectingClientFactory):
 	Subclass this to add functionality, or possibly use it as-is.
 	"""
 	protocol = ShetClientProtocol
-
+	
+	root = '/'
+	
 	def __init__(self):
 		self.properties = {}
 		self.events = {}
@@ -139,6 +164,17 @@ class ShetClient(ReconnectingClientFactory):
 		self.raise_queue = []
 		self.call_queue = []
 		self.client = None
+		
+		for name in dir(self):
+			attr = getattr(self, name)
+			if isinstance(attr, shet_action):
+				self.add_action(name, MethodType(attr.f, self, self.__class__))
+				setattr(self, name, MethodType(attr.f, self, self.__class__))
+			elif isinstance(attr, shet_property):
+				self.add_property(name, 
+				                   MethodType(attr.get, self, self.__class__),
+				                   MethodType(attr.set_f, self, self.__class__))
+				setattr(self, name, MethodType(attr.get, self, self.__class__),)
 
 
 	def on_connect(self):
@@ -150,6 +186,13 @@ class ShetClient(ReconnectingClientFactory):
 		"""Called when the client disconnects from the server.
 		"""
 		pass
+	
+	
+	def relative_path(self, path):
+		if path.startswith('/'):
+			return path
+		else:
+			return os.path.join(self.root, path)
 
 
 	def add_property(self, path, set_callback, get_callback):
@@ -163,6 +206,7 @@ class ShetClient(ReconnectingClientFactory):
 		@return Object representing the property.
 		        Pass to remove_property() to remove.
 		"""
+		path = self.relative_path(path)
 		prop = Property(path, set_callback, get_callback)
 		self.properties[path] = prop
 		if self.client is not None:
@@ -185,6 +229,7 @@ class ShetClient(ReconnectingClientFactory):
 		        Pass this to remove_event() to remove the event.
 			Call this like a function to raise the event.
 		"""
+		path = self.relative_path(path)
 		def _raise(*args):
 			return self._raise(path, *args)
 		event = Event(path, _raise)
@@ -210,6 +255,7 @@ class ShetClient(ReconnectingClientFactory):
 		@return An object that can be passed to unwatch_event()
 		        to stop watching this event.
 		"""
+		path = self.relative_path(path)
 		self.watched_events[path] = (callback, delete_callback)
 		if self.client is not None:
 			self.client.send_watch(path)		
@@ -231,6 +277,7 @@ class ShetClient(ReconnectingClientFactory):
 		@return An object that can be passed to remove_action()
 		        to remove this action.
 		"""
+		path = self.relative_path(path)
 		action = Action(path, callback)
 		self.actions[path] = action
 		if self.client is not None:
@@ -252,6 +299,7 @@ class ShetClient(ReconnectingClientFactory):
 		@param *args the arguments of the action.
 		@return The Deferred result of the action.
 		"""
+		path = self.relative_path(path)
 		if self.client is not None:
 			return self.client.send_call(path, *args)
 		else:
@@ -265,6 +313,7 @@ class ShetClient(ReconnectingClientFactory):
 		@param path The path to the property.
 		@return The Deferred value of the property.
 		"""
+		path = self.relative_path(path)
 		if self.client is not None:
 			return self.client.send_get(path)
 		else:
@@ -278,6 +327,7 @@ class ShetClient(ReconnectingClientFactory):
 		@param value The new value.
 		@return Deferred success/failure.
 		"""
+		path = self.relative_path(path)
 		if self.client is not None:
 			return self.client.send_set(path, value)
 		else:
