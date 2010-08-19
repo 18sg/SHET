@@ -3,9 +3,9 @@
 from distutils.core import setup
 
 setup(
-    name='SHET',
+    name='interSHET',
     version='0.1',
-    description='SHET House Event Tunnelling',
+    description='Spiffing House Event Tunnelling',
     author='The UHG Guys',
     url='http://github.com/tomjnixon/interSHET',
     package_dir = {'shet': 'src'},

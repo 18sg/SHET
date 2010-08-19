@@ -90,8 +90,9 @@ class ShetServerProtocol(ShetProtocol):
 	@command(commands.call)
 	def cmd_call(self, path, *args):
 		node = self.factory.fs.get_node(path)
-		node.call(*args)
+		return node.call(*args)
 
+		
 
 
 	def send_get(self, path):
