@@ -3,6 +3,9 @@ from collections import defaultdict
 
 
 class DirectoryTree(defaultdict):
+	
+	type = "dir"
+	
 	def __init__(self, parent = None):
 		defaultdict.__init__(self, lambda: DirectoryTree(self))
 
@@ -40,17 +43,19 @@ class FileSystem(object):
 		return self.get_node(self.join_path(parts[:-1]))[parts[-1]]
 
 	
-	def simplify_node(self, node):
+	def simplify_node(self, node, recursive=True):
 		if isinstance(node, DirectoryTree):
-			return dict((key, self.simplify_node(value))
+			return dict((key, self.simplify_node(value) 
+			                  if recursive 
+			                  else value.type)
 			            for (key, value)
 			            in node.iteritems())
 		else:
 			return node.type
 
 
-	def list_dir(self, path='/'):
-		return self.simplify_node(self.get_node(path))
+	def list_dir(self, path='/', recursive=True):
+		return self.simplify_node(self.get_node(path), recursive)
 
 
 	def list_full_paths(self, path='/'):
