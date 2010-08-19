@@ -6,6 +6,7 @@ import traceback
 
 from shet import IdGeneratorMixin
 from shet.command_runner import CommandRunnerMixin, command
+from shet.error import serialize_error
 import commands
 
 
@@ -34,14 +35,15 @@ class ShetProtocol(LineReceiver,
 				d.addErrback(self.command_fail, return_id)
 
 		except Exception, e:
-			self.send_command(return_id, commands._return, 1, repr(e))
+			self.send_command(return_id, commands._return, 1, serialize_error(e))
 
-			
+
 	def command_complete(self, retval, return_id):
 		self.send_command(return_id, commands._return, 0, retval)
 
 	def command_fail(self, e, return_id):
-		self.send_command(return_id, commands._return, 1, repr(e))
+		e.printTraceback()
+		self.send_command(return_id, commands._return, 1, serialize_error(e))
 		
 
 	def send_command(self, return_id, name, *args):
