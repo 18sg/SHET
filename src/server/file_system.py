@@ -2,25 +2,30 @@ import os.path
 from collections import defaultdict
 
 
-class DirectoryTree(defaultdict):
+class DirectoryTree(dict):
 	
 	type = "dir"
 	
-	def __init__(self, parent = None):
-		defaultdict.__init__(self, lambda: DirectoryTree(self))
-
+	def __init__(self, parent=None):
+		dict.__init__(self)
 		self.parent = parent
-
+	
+	def add_get(self, key):
+		try:
+			return self[key]
+		except KeyError:
+			new_dir = DirectoryTree(self)
+			self[key] = new_dir
+			return new_dir
+	
 	def __delitem__(self, key):
-		defaultdict.__delitem__(self, key)
+		dict.__delitem__(self, key)
 		
 		if not self and self.parent is not None:
 			for key, value in self.parent.iteritems():
 				if value == self:
 					del self.parent[key]
 					break
-
-
 
 class FileSystem(object):
 	
@@ -35,12 +40,12 @@ class FileSystem(object):
 		return '/'.join(path)
 
 
-	def get_node(self, path):
+	def get_node(self, path, add=False):
 		parts = self.split_path(path)
 		if not parts:
 			return self.root
-
-		return self.get_node(self.join_path(parts[:-1]))[parts[-1]]
+		parent = self.get_node(self.join_path(parts[:-1]), add)
+		return parent.add_get(parts[-1]) if add else parent[parts[-1]]
 
 	
 	def simplify_node(self, node, recursive=True):
@@ -80,7 +85,7 @@ class FileSystem(object):
 		
 		assert name, Exception("Must specify a file.")
 
-		self.get_node(path)[name] = node
+		self.get_node(path, True)[name] = node
 
 
 	def remove(self, path):
