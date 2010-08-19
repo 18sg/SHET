@@ -17,3 +17,8 @@ class MetaShet(ShetClient):
 	@shet_action
 	def ls(self, dir='/'):
 		return self.server.fs.list_dir(dir, False)
+	
+	@shet_action
+	def type(self, loc='/'):
+		return self.server.fs.get_node(loc).type
+
