@@ -13,3 +13,5 @@ def serialize_error(error):
 	else:
 		return ["UnknownError", [str(error)]]
 
+class ShetException(Exception):
+	pass
