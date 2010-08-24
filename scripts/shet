@@ -1,0 +1,64 @@
+#!/usr/bin/python
+import sys
+import urllib
+import json
+
+shet_http_server = "http://localhost:8080/"
+
+def do_shet(path, data):
+	url = shet_http_server + path.lstrip('/')
+	return urllib.urlopen(url, urllib.urlencode(data)).read()
+
+def load_single(arg):
+	try:
+		return json.loads(arg)
+	except ValueError:
+		return arg
+
+def load_args(args):
+	if len(args) == 0:	
+		return []
+	else:
+		try:
+			return json.loads(' '.join(args))
+		except ValueError:
+			return map(load_single, args) if len(args) > 1 else load_single(args[0])
+
+def format_result(result, linefy):
+	if not linefy:
+		print result
+	else:
+		json_result = json.loads(result)
+		if isinstance(json_result, list):
+			for x in json_result:
+				print x
+		elif isinstance(json_result, dict):
+			for x, y in json_result.iteritems():
+				print "%s:%s" % (x, y)
+		else:
+			print json_result
+
+def main():
+	args = sys.argv[1:]
+	
+	linefy = False
+	if args[0] == "-l":
+		linefy = True
+		args.pop(0)
+	
+	if args[0].lower() == "set":
+		result = do_shet(args[1], dict(value=json.dumps(load_args(args[2:]))))
+		format_result(result, linefy)
+	else:
+		url = args[0]
+		extra_args = load_args(args[1:])
+		if not isinstance(extra_args, list):
+			extra_args = [extra_args]
+		if not extra_args:
+			result = do_shet(url, {})
+		else:
+			result = do_shet(url, dict(args=json.dumps(extra_args)))
+		format_result(result, linefy)
+
+if __name__ == "__main__":
+	main()
