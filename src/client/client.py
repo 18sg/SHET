@@ -242,9 +242,9 @@ class ShetClient(ReconnectingClientFactory):
 		"""Remove an event.
 		@param event Object returned from add_event().
 		"""
-		del self.events[path]
+		del self.events[event.path]
 		if self.client is not None:
-			self.client.send_rmevent(path)
+			self.client.send_rmevent(event.path)
 		
 	
 	def watch_event(self, path, callback, delete_callback=lambda:None):
