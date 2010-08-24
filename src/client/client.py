@@ -9,21 +9,35 @@ import os.path
 from types import MethodType
 
 
-
-class shet_action(object):
+class Decorator(object):
+	func_name = "f"
+	
 	def __init__(self, f):
-		self.f = f
+		self.has_func = not isinstance(f, basestring)
+		if self.has_func:
+			self.name = None
+			setattr(self, self.func_name, f)
+		else:
+			self.f = None
+			self.name = f
 	
 	def __call__(self, *args, **kwargs):
-		return self.f(*args, **kwargs)
+		if self.has_func:
+			return getattr(self, self.func_name)(*args, **kwargs)
+		else:
+			setattr(self, self.func_name, args[0])
+			self.has_func = False
+			return self
+		
+	
+class shet_action(Decorator):
+	pass
 
-class shet_property(object):
+class shet_property(Decorator):
+	func_name = "get"
 	def __init__(self, f):
-		self.get = f
+		Decorator.__init__(self, f)
 		self.set_f = None
-	
-	def __call__(self, *args, **kwargs):
-		return self.get(*args, **kwargs)
 	
 	def set(self, f):
 		self.set_f = f
@@ -168,7 +182,8 @@ class ShetClient(ReconnectingClientFactory):
 		for name in dir(self):
 			attr = getattr(self, name)
 			if isinstance(attr, shet_action):
-				self.add_action(name, MethodType(attr.f, self, self.__class__))
+				action_name = attr.name or name
+				self.add_action(action_name, MethodType(attr.f, self, self.__class__))
 				setattr(self, name, MethodType(attr.f, self, self.__class__))
 			elif isinstance(attr, shet_property):
 				self.add_property(name, 
