@@ -275,6 +275,25 @@ class ShetClient(ReconnectingClientFactory):
 		if self.client is not None:
 			self.client.send_watch(path)		
 		return path
+	
+	def wait_for(self, path):
+		"""Wait for an event to fire on the server.
+		@param path Path to the event.
+		@return A deferred that will be called on the event being fired,
+		        or errorred if the event is deleted.
+		"""
+		d = Deferred()
+		event = self.watch_event(path, None, None)
+		
+		def callback(*args):
+			d.callback(args)
+			self.unwatch_event(event)
+			
+		def delete_callback(*args):
+			d.errback(args)
+			
+		self.watched_events[event] = (callback, delete_callback)
+		return d
 
 	def unwatch_event(self, event):
 		"""Stop watching an event.
