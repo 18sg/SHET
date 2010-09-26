@@ -86,6 +86,11 @@ class ShetServerProtocol(ShetProtocol):
 		self.fs_nodes.append(file_system.Action(self.factory.fs,
 		                                        path,
 		                                        self))
+	@command(commands.rmaction)
+	def cmd_rmaction(self, path):
+		node = self.factory.fs.get_node(path)
+		assert node.owner == self
+		node.delete()
 
 	@command(commands.call)
 	def cmd_call(self, path, *args):
