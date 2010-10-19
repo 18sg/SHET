@@ -200,7 +200,20 @@ class ShetClient(ReconnectingClientFactory):
 	def on_disconnect(self):
 		"""Called when the client disconnects from the server.
 		"""
-		pass
+	
+	
+	def reset(self):
+		"""Unregister everything!
+		"""
+		
+		for prop in self.properties.values():
+			self.remove_property(prop)
+		for event in self.events.values():
+			self.remove_event(event)
+		for action in self.actions.values():
+			self.remove_action(action)
+		for event in self.watched_events.values():
+			self.unwatch_event(event)
 	
 	
 	def relative_path(self, path):
