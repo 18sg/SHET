@@ -262,7 +262,7 @@ class ShetClient(ReconnectingClientFactory):
 			self.client.send_rmevent(event.path)
 		
 	
-	def watch_event(self, path, callback, delete_callback=lambda:None):
+	def watch_event(self, path, callback, delete_callback=None):
 		"""Watch an event on the server.
 		@param path Path to the event.
 		@param callback Called when the event is raised.
@@ -271,9 +271,22 @@ class ShetClient(ReconnectingClientFactory):
 		        to stop watching this event.
 		"""
 		path = self.relative_path(path)
+		
+		if delete_callback is None:
+		
+			def delete_callback(delay=1):
+				try:
+					
+					def errback(e=None):
+						reactor.callLater(delay, delete_callback, delay * 1.5)
+						
+					self.client.send_watch(path).addErrback(errback)
+				except:
+					reactor.callLater(delay, delete_callback, delay * 1.5)
+					
 		self.watched_events[path] = (callback, delete_callback)
 		if self.client is not None:
-			self.client.send_watch(path)		
+			self.client.send_watch(path).addErrback(lambda e=None: delete_callback())
 		return path
 	
 	def wait_for(self, path):
