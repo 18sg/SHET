@@ -2,8 +2,9 @@
 import sys
 import urllib
 import json
+import os
 
-shet_http_server = "http://localhost:8080/"
+shet_http_server = os.getenv("SHET_HTTP_URL") or "http://localhost:8080/"
 
 def do_shet(path, data):
 	url = shet_http_server + path.lstrip('/')

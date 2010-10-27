@@ -28,4 +28,4 @@ class Persist(ShetClient):
 
 
 if __name__ == "__main__":
-	Persist().run("localhost")
+	Persist().run()

@@ -55,6 +55,6 @@ class MyFactory(HTTPFactory):
 
 if __name__ == "__main__":
 	shet = ShetClient()
-	shet.install("localhost")
+	shet.install()
 	reactor.listenTCP(8080, MyFactory(shet))
 	reactor.run()

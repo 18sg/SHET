@@ -5,6 +5,7 @@ from twisted.internet import reactor
 from shet import commands
 from shet import ShetProtocol
 from shet.command_runner import command
+import os
 import os.path
 from types import MethodType
 
@@ -412,21 +413,23 @@ class ShetClient(ReconnectingClientFactory):
 		return self.properties[path].set(value)
 
 
-	def install(self, address, port=11235):
+	def install(self, address=None, port=None):
 		"""Install this instance into the twisted reactor.
 		Use this if you want to run some other service in parallel.
-		@param address address to connect to.
-		@param port the port to use.
+		@param address address to connect to; defaults to $SHET_HOST or localhost.
+		@param port the port to use; defaults to $SHET_PORT or 11235
 		"""
+		address = address or os.getenv("SHET_HOST") or "localhost"
+		port = port or os.getenv("SHET_PORT") or 11235
 		reactor.connectTCP(address, port, self)
 
-	def run(self, address, port=11235):
+	def run(self, address=None, port=None):
 		"""Run this instance of the client.
 		This will not return until stop() is called.
 		
 		nb: This calls twisted.internet.reactor.run().
-		@param address address to connect to.
-		@param port the port to use.
+		@param address address to connect to; defaults to $SHET_HOST or localhost.
+		@param port the port to use; defaults to $SHET_PORT or 11235
 		"""
 		self.install(address, port)
 		reactor.run()
