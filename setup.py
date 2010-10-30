@@ -7,7 +7,7 @@ setup(
     version='0.1',
     description='SHET House Event Tunnelling',
     author='The UHG Guys',
-    url='http://github.com/tomjnixon/interSHET',
+    url='http://github.com/18sg/SHET',
     package_dir = {'shet': 'src'},
     packages=['shet', 'shet.server', 'shet.client'],
     scripts=['scripts/shetserv', 'scripts/shet', 'scripts/shet_complete'])
