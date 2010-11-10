@@ -8,6 +8,7 @@ from shet.command_runner import command
 import os
 import os.path
 from types import MethodType
+import collections
 
 
 class Decorator(object):
@@ -148,11 +149,17 @@ class ShetClientProtocol(ShetProtocol):
 
 	@command(commands.event)
 	def cmd_event(self, path, *args):
-		self.factory.watched_events[path][0](*args)
+		# Make a copy of the dict so that if the callbacks watch events they
+		# aren't immediately called.
+		for event in dict(self.factory.watched_events[path]).itervalues():
+			if event[0] is not None:
+				event[0](*args)
 
 	@command(commands.eventdeleted)
 	def cmd_eventdeleted(self, path):
-		self.factory.watched_events[path][1]()
+		for event in dict(self.factory.watched_events[path]).itervalues():
+			if event[1] is not None:
+				event[1]()
 
 	@command(commands.docall)
 	def cmd_docall(self, path, *args):
@@ -172,7 +179,7 @@ class ShetClient(ReconnectingClientFactory):
 	def __init__(self):
 		self.properties = {}
 		self.events = {}
-		self.watched_events = {}
+		self.watched_events = collections.defaultdict(dict)
 		self.actions = {}
 		self.get_queue = []
 		self.set_queue = []
@@ -214,7 +221,8 @@ class ShetClient(ReconnectingClientFactory):
 		for action in self.actions.values():
 			self.remove_action(action)
 		for event in self.watched_events.values():
-			self.unwatch_event(event)
+			for watch in event:
+				self.unwatch_event(watch)
 	
 	
 	def relative_path(self, path):
@@ -286,22 +294,24 @@ class ShetClient(ReconnectingClientFactory):
 		"""
 		path = self.relative_path(path)
 		
-		if delete_callback is None:
-		
-			def delete_callback(delay=1):
+		if not self.watched_events[path]:
+			def _delete_callback(delay=1):
 				try:
 					
 					def errback(e=None):
-						reactor.callLater(delay, delete_callback, delay * 1.5)
+						reactor.callLater(delay, _delete_callback, delay * 1.5)
 						
 					self.client.send_watch(path).addErrback(errback)
 				except:
-					reactor.callLater(delay, delete_callback, delay * 1.5)
+					reactor.callLater(delay, _delete_callback, delay * 1.5)
 					
-		self.watched_events[path] = (callback, delete_callback)
-		if self.client is not None:
-			self.client.send_watch(path).addErrback(lambda e=None: delete_callback())
-		return path
+			self.watched_events[path][None] = (None, _delete_callback)
+			if self.client is not None:
+				self.client.send_watch(path).addErrback(lambda e=None: delete_callback())
+		
+		watch = Watch(path)
+		self.watched_events[path][watch] = (callback, delete_callback)
+		return watch
 	
 	def wait_for(self, path):
 		"""Wait for an event to fire on the server.
@@ -319,17 +329,15 @@ class ShetClient(ReconnectingClientFactory):
 		def delete_callback(*args):
 			d.errback(args)
 			
-		self.watched_events[event] = (callback, delete_callback)
+		self.watched_events[event.path][event] = (callback, delete_callback)
 		return d
 
 	def unwatch_event(self, event):
 		"""Stop watching an event.
 		@param event an object returned from watch_event().
 		"""
-		del self.watched_events[event]
-		if self.client is not None:
-			self.client.send_ignore(event)
-			
+		del self.watched_events[event.path][event]
+		# TODO: possibly unwatch event.
 
 	def add_action(self, path, callback):
 		"""Create an action.
@@ -473,6 +481,11 @@ class Event(Node):
 		self.raise_callback(*args)
 	
 	__call__ = _raise
+
+class Watch(Node):
+
+	def __init__(self, path):
+		self.path = path
 
 
 class Action(Node):
