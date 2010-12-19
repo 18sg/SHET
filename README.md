@@ -3,6 +3,8 @@ SHET House Event Tunneling
 
 SHET is a simple asynchronous communication framework designed to make it easy to connect physical things together to produce useful behaviours. It was designed with home automation in mind, but has many other uses.
 
+This readme gives an overview of the kind of things that can be done with SHET. When you're ready to get started, see the [setup guide](/18sg/SHET/blob/master/doc/setup.md).
+
 Architecture
 ------------
 ![Diagram of SHET Architecture](/18sg/SHET/raw/master/doc/diagram_simple.png)
