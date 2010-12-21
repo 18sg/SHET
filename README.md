@@ -7,7 +7,7 @@ This readme gives an overview of the kind of things that can be done with SHET. 
 
 Architecture
 ------------
-![Diagram of SHET Architecture](/18sg/SHET/raw/master/doc/diagram_simple.png)
+![Diagram of SHET Architecture](https://github.com/18sg/SHET/raw/master/doc/diagram_simple.png)
 
 The SHET Server exists to connect clients together; all application logic lives in the clients, and the server just provides a uniform way for clients to talk to each other.
 
