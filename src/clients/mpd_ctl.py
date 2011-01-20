@@ -32,7 +32,7 @@ class MpdClient(ShetClient):
 		self.root = dir
 		ShetClient.__init__(self)
 		
-		commands = """next prev play toggle stop clear seek move
+		commands = """next prev pause play toggle stop clear seek move
 		              volume repeat random single consume findadd""".split()
 		
 		# Because closures in python are... a bit nutty.
@@ -76,6 +76,11 @@ class MpdClient(ShetClient):
 	@with_mpd
 	def current_pos_set(self, val):
 		self.mpd_client.seek(val[0], val[1])
+	
+	@shet_property
+	@with_mpd
+	def playing(self):
+		
 	
 	
 	@shet_action
