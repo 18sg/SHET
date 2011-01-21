@@ -12,7 +12,7 @@ All clients will probably contain something like this:
 		# unless they begin with a '/'.
 		root = "/test/"
 		
-		def __init__(self, dir):
+		def __init__(self):
 			# Make sure you initialise the shet client in your constructor.
 			ShetClient.__init__(self)
 
