@@ -91,7 +91,7 @@ Properties
 
 To add a property, call `self.add_property(path, set_callback, get_callback)`:
 
-	self.add_property("x", self.set_x, self.get_x)
+	self.add_property("x", self.get_x, self.set_x)
 	
 	...
 	
