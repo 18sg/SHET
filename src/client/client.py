@@ -194,7 +194,8 @@ class ShetClient(ReconnectingClientFactory):
 				self.add_action(action_name, MethodType(attr.f, self, self.__class__))
 				setattr(self, name, MethodType(attr.f, self, self.__class__))
 			elif isinstance(attr, shet_property):
-				self.add_property(name, 
+				prop_name = attr.name or name
+				self.add_property(prop_name, 
 				                   MethodType(attr.get, self, self.__class__),
 				                   MethodType(attr.set_f, self, self.__class__))
 				setattr(self, name, MethodType(attr.get, self, self.__class__),)
