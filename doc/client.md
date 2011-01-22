@@ -12,7 +12,7 @@ All clients will probably contain something like this:
 		# unless they begin with a '/'.
 		root = "/test/"
 		
-		def __init__(self, dir):
+		def __init__(self):
 			# Make sure you initialise the shet client in your constructor.
 			ShetClient.__init__(self)
 
@@ -91,7 +91,7 @@ Properties
 
 To add a property, call `self.add_property(path, set_callback, get_callback)`:
 
-	self.add_property("x", self.set_x, self.get_x)
+	self.add_property("x", self.get_x, self.set_x)
 	
 	...
 	
