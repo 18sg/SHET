@@ -137,7 +137,9 @@ class Event(Node):
 		self.watchers = []
 
 	def watch(self, watcher):
-		self.watchers.append(watcher)
+		if watcher not in self.watchers:
+			self.watchers.append(watcher)
+			watcher.send_eventcreated(self.path)
 
 	def ignore(self, watcher):
 		self.watchers.remove(watcher)

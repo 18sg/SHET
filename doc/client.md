@@ -119,7 +119,7 @@ Beware that `get` and `call` return deferreds containing the value. To deal with
 
 	def add_one_to_x(self):
 		
-		def on_x_value(self, value):
+		def on_x_value(value):
 			self.set("x", value + 1)
 		
 		self.get("x").addCallback(on_x_value)

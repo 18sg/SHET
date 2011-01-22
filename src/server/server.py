@@ -17,11 +17,19 @@ class ShetServerProtocol(ShetProtocol):
 		self.on_connection_lost = Deferred()
 
 		self.fs_nodes = []
+		self.watches = set()
 
 	def connectionLost(self, reason):
 		self.factory.connections.remove(self)
 		self.connected = False
-
+		
+		for watch in self.watches:
+			try:
+				node = self.factory.fs.get_node(watch)
+				node.ignore(self)
+			except KeyError:
+				pass
+		
 		for node in self.fs_nodes:
 			node.delete()
 
@@ -54,11 +62,23 @@ class ShetServerProtocol(ShetProtocol):
 		                                          path,
 		                                          self))
 
+	def update_watches(self):
+		"""Watch all events in self.watches.
+		"""
+		for event in self.watches:
+			try:
+				node = self.factory.fs.get_node(event)
+				node.watch(self)
+			except KeyError:
+				pass
+	
 	@command(commands.mkevent)
 	def cmd_mkevent(self, path):
 		self.fs_nodes.append(file_system.Event(self.factory.fs,
 		                                       path,
 		                                       self))
+		for conn in self.factory.connections:
+			conn.update_watches()
 
 	@command(commands.rmevent)
 	def cmd_rmevent(self, path):
@@ -73,13 +93,21 @@ class ShetServerProtocol(ShetProtocol):
 
 	@command(commands.watch)
 	def cmd_watch(self, path):
-		node = self.factory.fs.get_node(path)
-		node.watch(self)
+		self.watches.add(path)
+		try:
+			node = self.factory.fs.get_node(path)
+			node.watch(self)
+		except KeyError:
+			pass
 
 	@command(commands.ignore)
 	def cmd_ignore(self, path):
-		node = self.factory.fs.get_node(path)
-		node.ignore(self)
+		self.watches.remove(path)
+		try:
+			node = self.factory.fs.get_node(path)
+			node.ignore(self)
+		except KeyError:
+			pass
 
 	@command(commands.mkaction)
 	def cmd_mkaction(self, path):
@@ -109,6 +137,9 @@ class ShetServerProtocol(ShetProtocol):
 	def send_event(self, path, *args):
 		return self.send_command_with_callback(commands.event, path, *args)
 
+	def send_eventcreated(self, path):
+		return self.send_command_with_callback(commands.eventcreated, path)
+	
 	def send_eventdeleted(self, path):
 		return self.send_command_with_callback(commands.eventdeleted, path)
 
