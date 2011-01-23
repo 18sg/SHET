@@ -151,15 +151,21 @@ class ShetClientProtocol(ShetProtocol):
 	def cmd_event(self, path, *args):
 		# Make a copy of the dict so that if the callbacks watch events they
 		# aren't immediately called.
-		for event in dict(self.factory.watched_events[path]).itervalues():
-			if event[0] is not None:
-				event[0](*args)
+		for event in list(self.factory.watched_events[path]):
+			if event.callback is not None:
+				event.callback(*args)
 
 	@command(commands.eventdeleted)
 	def cmd_eventdeleted(self, path):
-		for event in dict(self.factory.watched_events[path]).itervalues():
-			if event[1] is not None:
-				event[1]()
+		for event in list(self.factory.watched_events[path]):
+			if event.delete_callback is not None:
+				event.delete_callback()
+
+	@command(commands.eventcreated)
+	def cmd_eventcreated(self, path):
+		for event in list(self.factory.watched_events[path]):
+			if event.create_callback is not None:
+				event.create_callback()
 
 	@command(commands.docall)
 	def cmd_docall(self, path, *args):
@@ -179,7 +185,7 @@ class ShetClient(ReconnectingClientFactory):
 	def __init__(self):
 		self.properties = {}
 		self.events = {}
-		self.watched_events = collections.defaultdict(dict)
+		self.watched_events = collections.defaultdict(list)
 		self.actions = {}
 		self.get_queue = []
 		self.set_queue = []
@@ -221,7 +227,7 @@ class ShetClient(ReconnectingClientFactory):
 			self.remove_event(event)
 		for action in self.actions.values():
 			self.remove_action(action)
-		for event in self.watched_events.values():
+		for event in self.watched_events:
 			for watch in event:
 				self.unwatch_event(watch)
 	
@@ -285,7 +291,7 @@ class ShetClient(ReconnectingClientFactory):
 			self.client.send_rmevent(event.path)
 		
 	
-	def watch_event(self, path, callback, delete_callback=None):
+	def watch_event(self, path, callback, create_callback=None, delete_callback=None):
 		"""Watch an event on the server.
 		@param path Path to the event.
 		@param callback Called when the event is raised.
@@ -295,49 +301,33 @@ class ShetClient(ReconnectingClientFactory):
 		"""
 		path = self.relative_path(path)
 		
-		if not self.watched_events[path]:
-			def _delete_callback(delay=1):
-				try:
-					
-					def errback(e=None):
-						reactor.callLater(delay, _delete_callback, delay * 1.5)
-						
-					self.client.send_watch(path).addErrback(errback)
-				except:
-					reactor.callLater(delay, _delete_callback, delay * 1.5)
-					
-			self.watched_events[path][None] = (None, _delete_callback)
-			if self.client is not None:
-				self.client.send_watch(path).addErrback(lambda e=None: delete_callback())
+		if not self.watched_events[path] and self.client is not None:
+				self.client.send_watch(path)
 		
-		watch = Watch(path)
-		self.watched_events[path][watch] = (callback, delete_callback)
+		watch = Watch(path, callback, create_callback, delete_callback)
+		self.watched_events[path].append(watch)
 		return watch
 	
 	def wait_for(self, path):
 		"""Wait for an event to fire on the server.
 		@param path Path to the event.
-		@return A deferred that will be called on the event being fired,
-		        or errorred if the event is deleted.
+		@return A deferred that will be called on the event being fired.
 		"""
 		d = Deferred()
-		event = self.watch_event(path, None, None)
 		
 		def callback(*args):
 			d.callback(args)
 			self.unwatch_event(event)
-			
-		def delete_callback(*args):
-			d.errback(args)
-			
-		self.watched_events[event.path][event] = (callback, delete_callback)
+		
+		event = self.watch_event(path, callback)
+		
 		return d
 
 	def unwatch_event(self, event):
 		"""Stop watching an event.
 		@param event an object returned from watch_event().
 		"""
-		del self.watched_events[event.path][event]
+		self.watched_events[event.path].remove(event)
 		# TODO: possibly unwatch event.
 
 	def add_action(self, path, callback):
@@ -485,8 +475,11 @@ class Event(Node):
 
 class Watch(Node):
 
-	def __init__(self, path):
+	def __init__(self, path, callback, create_callback, delete_callback):
 		self.path = path
+		self.callback = callback
+		self.create_callback = create_callback
+		self.delete_callback = delete_callback
 
 
 class Action(Node):
