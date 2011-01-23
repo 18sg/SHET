@@ -80,7 +80,20 @@ class MpdClient(ShetClient):
 	@shet_property
 	@with_mpd
 	def playing(self):
-		
+		status = self.mpd_client.status()
+		return status["state"] == "play"
+	
+	@playing.set
+	@with_mpd
+	def playing_set(self, playing):
+		# If it's stopped, play. if it's paused/playing, pause/unpause.
+		status = self.mpd_client.status()
+		if status["state"] == "stop" and playing:
+			self.mpd_client.play()
+		elif status["state"] == "pause" and playing:
+			self.mpd_client.pause(0)
+		elif status["state"] == "play" and not playing:
+			self.mpd_client.pause(1)
 	
 	
 	@shet_action
