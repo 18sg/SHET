@@ -182,6 +182,9 @@ class ShetClient(ReconnectingClientFactory):
 	
 	root = '/'
 	
+	# Maximum reconnection delay.
+	maxDelay = 5
+	
 	def __init__(self):
 		self.properties = {}
 		self.events = {}
