@@ -8,6 +8,7 @@ class MetaShet(ShetClient):
 	def __init__(self, server):
 		ShetClient.__init__(self)
 		self.server = server
+		self.server.fs.on_change = self.add_event("on_tree_change")
 	
 	
 	@shet_action("ls-r")
