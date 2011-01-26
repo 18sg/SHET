@@ -52,8 +52,7 @@ class MpdClient(ShetClient):
 	@shet_property
 	@with_mpd
 	def playlist(self):
-		playlist = self.mpd_client.playlist()
-		return playlist
+		return [i["file"] for i in self.mpd_client.playlistinfo()]
 	
 	@playlist.set
 	@with_mpd
