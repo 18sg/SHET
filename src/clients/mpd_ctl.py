@@ -94,16 +94,18 @@ class MpdClient(ShetClient):
 		elif status["state"] == "play" and not playing:
 			self.mpd_client.pause(1)
 	
+	def file_prefix(self, prefix, f_name):
+		return f_name if '://' in f_name else (prefix + f_name)
 	
 	@shet_action
 	@make_sync
 	def get_playlist(self, dir, prefix=""):
-		"""Get the playlist and current position from a simplar client running in
+		"""Get the playlist and current position from a similar client running in
 		dir, prefixing all song locations with prefix.
 		"""
 		playlist = (yield self.get(dir + "/playlist"))
 		current_pos = (yield self.get(dir + "/current_pos"))
-		self.playlist_set(map(prefix.__add__, playlist))
+		self.playlist_set([self.file_prefix(prefix, f_name) for f_name in playlist])
 		self.current_pos_set(current_pos)
 
 
