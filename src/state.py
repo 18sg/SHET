@@ -21,20 +21,24 @@ class State(object):
 		property.bind(self)
 	
 	def activate(self):
+		changed = not self.active
 		self.active = True
 		
-		for property in self.properties:
-			property.on_activate()
-	
-	def deactivate(self):
-		self.active = False
+		print "\t %s" % self
 		
 		for property in self.properties:
-			property.on_deactivate()
+			if property.always or changed:
+				property.on_activate()
 	
-	def transform(self, new_state):
-		self.deactivate()
-		new_state.activate()
+	def deactivate(self):
+		changed = self.active
+		self.active = False
+		
+		print "\t %s" % self
+		
+		for property in self.properties:
+			if property.always or changed:
+				property.on_deactivate()
 	
 	def push(self):
 		self.stack.append(self.active)
@@ -50,10 +54,10 @@ class State(object):
 			self.deactivate()
 	
 	def transform_to(self, new_state):
-		print self
-		if self.active:
-			self.deactivate()
-			new_state.activate()
+		print "%s -> %s" % (self.name, new_state.name)
+		# if self.active:
+		self.deactivate()
+		new_state.activate()
 	
 	def __repr__(self):
 		return "%s(%s, %s)" % ( self.__class__.__name__
@@ -64,6 +68,8 @@ class State(object):
 
 
 class StateProperty(object):
+	
+	always = True
 	
 	def bind(self, state):
 		assert not hasattr(self, "state"), "You should only bind a StateProperty to one state."
@@ -79,11 +85,12 @@ class StateProperty(object):
 
 class Timeout(StateProperty):
 	
-	def __init__(self, timeout, next_state):
+	def __init__(self, timeout, next_state, always=True):
 		StateProperty.__init__(self)
 		self.timeout = timeout
 		self.next_state = next_state
 		self.timer = None
+		self.always = always
 	
 	def on_activate(self):
 		if self.timer is None or not self.timer.active():
@@ -92,15 +99,16 @@ class Timeout(StateProperty):
 			self.timer.reset(self.timeout)
 	
 	def on_timer(self):
-		self.state.transform(self.next_state)
+		self.state.transform_to(self.next_state)
 
 
 
 class RaiseOnActivate(StateProperty):
 	
-	def __init__(self, property, value=None):
+	def __init__(self, property, value=None, always=False):
 		self.property = property
 		self.value = value
+		self.always = always
 	
 	def on_activate(self):
 		self.property(self.value)
@@ -109,35 +117,40 @@ class RaiseOnActivate(StateProperty):
 
 class CallOnActivate(StateProperty):
 	
-	def __init__(self, shet_client, action, value=None):
+	def __init__(self, shet_client, action, value=None, always=False):
 		self.shet_client = shet_client
 		self.action = action
 		self.value = value
+		self.always = always
 	
 	def on_activate(self):
 		self.shet_client.call(self.action, self.value)
 
 
 
-class PyCallOnActivate(StateProperty):
-	
-	def __init__(self, callback):
-		self.callback = callback
-	
-	def on_activate(self):
-		self.callback()
-
-
-
 class SetOnActivate(StateProperty):
 	
-	def __init__(self, shet_client, property, value):
+	def __init__(self, shet_client, action, value=None, always=False):
 		self.shet_client = shet_client
-		self.property = property
+		self.action = action
 		self.value = value
+		self.always = always
 	
 	def on_activate(self):
-		self.shet_client.set(self.property, self.value)
+		self.shet_client.set(self.action, self.value)
+
+
+
+class PyCallOnActivate(StateProperty):
+	
+	def __init__(self, callback, always=False, *args, **kwargs):
+		self.callback = callback
+		self.always = always
+		self.args = args
+		self.kwargs = kwargs
+	
+	def on_activate(self):
+		self.callback(*self.args, **self.kwargs)
 
 
 
@@ -173,13 +186,25 @@ class TransformAlwaysOnEvent(StateProperty):
 		self.watch = self.shet_client.watch_event(self.event_name, self.on_event)
 	
 	def on_event(self):
-		self.state.transform(self.next_state)
+		self.state.transform_to(self.next_state)
 
 
 
 class StateMachine(object):
 	pass
 
+class StateMixIn(object):
+	def __init__(self):
+		self.states = collections.defaultdict(list)
+	
+	def push_shet_state(self, prop_name):
+		self.get(prop_name).addCallback(self.states[prop_name].append)
+	
+	def pop_shet_state(self, prop_name):
+		try:
+			self.set(prop_name, self.states[prop_name].pop())
+		except:
+			pass
 
 
 class LightingMixIn(object):
@@ -192,14 +217,14 @@ class LightingMixIn(object):
 		for state_a, state_b in zip(states, states[1:] + [states[0]]):
 			state_a.add_property(TransformOnEvent(self, event, state_b))
 	
-	def add_controller(self, states, values, controller, *args):
+	def add_controller(self, states, values, controller, *args, **kwarks):
 		for state, value in zip(states, values):
-			state.add_property(controller(*list(args) + [value]))
+			state.add_property(controller(*list(args) + [value], **kwarks))
 	
-	def setup_timed_light(self, name, light_prop, pir, timeout):
+	def setup_timed_light(self, name, light_prop, pir, timeout, always=False):
 		light = SwitchStates(State("%s_off" % name), State("%s_on" % name))
 		
-		self.add_controller(light, [0, 1], SetOnActivate, self, light_prop)
+		self.add_controller(light, [0, 1], SetOnActivate, self, light_prop, always=False)
 		light.on.add_property(Timeout(timeout, light.off))
 		light.off.add_property(TransformAlwaysOnEvent(self, pir, light.on))
 		light.off.activate()
@@ -222,11 +247,11 @@ class LightingMixIn(object):
 	
 	def all_on(self, *args):
 		for light in self.lights.itervalues():
-			light.off.transform(light.on)
+			light.off.transform_to(light.on)
 	
 	def all_off(self, *args):
 		for light in self.lights.itervalues():
-			light.on.transform(light.off)
+			light.on.transform_to(light.off)
 
 
 
@@ -235,13 +260,14 @@ BoolStates = collections.namedtuple("BoolStates", "false true")
 
 
 
-class TestStateMachine(ShetClient, StateMachine, LightingMixIn):
+class TestStateMachine(ShetClient, StateMachine, LightingMixIn, StateMixIn):
 	
 	def __init__(self):
 		ShetClient.__init__(self)
 		LightingMixIn.__init__(self)
+		StateMixIn.__init__(self)
 		
-		self.setup_timed_light("hall", "/tom/servo", "/tom/pir_landing", 60)
+		self.setup_timed_light("hall", "/tom/servo", "/tom/pir_landing", 30)
 		self.setup_timed_light("bog", "/jonathan/arduino/bogvo", "/jonathan/arduino/pir", 120)
 		
 		for link in "all_off all_on exit enter".split():
@@ -265,6 +291,12 @@ class TestStateMachine(ShetClient, StateMachine, LightingMixIn):
 		self.is_in.false.add_property(PyCallOnActivate(self.push_state))
 		self.is_in.false.add_property(CallOnActivate(self, "/tom/all_off"))
 		self.is_in.true.add_property(PyCallOnActivate(self.pop_state))
+		self.is_in.true.add_property(CallOnActivate(self, "/tom/dpms", True))
+		
+		self.going_out.add_property(CallOnActivate(self, "/tom/dpms", False))
+		self.going_out.add_property(PyCallOnActivate(self.push_shet_state, self, "/tom/mpd/playing"))
+		self.going_out.add_property(SetOnActivate(self, "/tom/mpd/playing", False))
+		self.is_in.true.add_property(PyCallOnActivate(self.pop_shet_state, self, "/tom/mpd/playing"))
 		
 		self.is_in.true.activate()
 	
@@ -281,7 +313,7 @@ class TestStateMachine(ShetClient, StateMachine, LightingMixIn):
 		self.lights[name] = light
 	
 	def on_switch_a(self, no):
-		actions = {1: "/tom/all_on",
+		actions = {1: "/tom/xine/pause",
 		           2: "/tom/all_off",
 		           3: "/tom/toggle_bedside",
 		           4: "/tom/toggle_reading",
