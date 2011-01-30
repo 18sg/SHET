@@ -71,7 +71,7 @@ class Bind(ShetClient):
 	
 	
 	def rm(self, event, action):
-		self.bindings.pop((event, action))
+		self.unwatch_event(self.bindings.pop((event, action)))
 
 
 if __name__ == "__main__":
