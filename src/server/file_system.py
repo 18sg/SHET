@@ -80,18 +80,23 @@ class FileSystem(object):
 					yield name
 				
 			
-	def add(self, path, node):
-		path, name = os.path.split(path)
+	def add(self, full_path, node):
+		path, name = os.path.split(full_path)
 		
 		assert name, Exception("Must specify a file.")
 
 		self.get_node(path, True)[name] = node
+		self.on_change("add", full_path)
 
 
 	def remove(self, path):
 		parts = self.split_path(path)
 		
 		del self.get_node(self.join_path(parts[:-1]))[parts[-1]]
+		self.on_change("remove", path)
+	
+	def on_change(self, action, path):
+		pass
 		
 		
 class Node(object):

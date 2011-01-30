@@ -317,12 +317,15 @@ class ShetClient(ReconnectingClientFactory):
 		@return A deferred that will be called on the event being fired.
 		"""
 		d = Deferred()
+		# We can't define the callback function without having the event.
+		event = self.watch_event(path, None)
 		
 		def callback(*args):
 			d.callback(args)
 			self.unwatch_event(event)
 		
-		event = self.watch_event(path, callback)
+		# Inject the callback.
+		event.callback = callback
 		
 		return d
 

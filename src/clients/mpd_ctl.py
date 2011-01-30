@@ -52,8 +52,7 @@ class MpdClient(ShetClient):
 	@shet_property
 	@with_mpd
 	def playlist(self):
-		playlist = self.mpd_client.playlist()
-		return playlist
+		return [i["file"] for i in self.mpd_client.playlistinfo()]
 	
 	@playlist.set
 	@with_mpd
@@ -80,18 +79,33 @@ class MpdClient(ShetClient):
 	@shet_property
 	@with_mpd
 	def playing(self):
-		
+		status = self.mpd_client.status()
+		return status["state"] == "play"
 	
+	@playing.set
+	@with_mpd
+	def playing_set(self, playing):
+		# If it's stopped, play. if it's paused/playing, pause/unpause.
+		status = self.mpd_client.status()
+		if status["state"] == "stop" and playing:
+			self.mpd_client.play()
+		elif status["state"] == "pause" and playing:
+			self.mpd_client.pause(0)
+		elif status["state"] == "play" and not playing:
+			self.mpd_client.pause(1)
+	
+	def file_prefix(self, prefix, f_name):
+		return f_name if '://' in f_name else (prefix + f_name)
 	
 	@shet_action
 	@make_sync
 	def get_playlist(self, dir, prefix=""):
-		"""Get the playlist and current position from a simplar client running in
+		"""Get the playlist and current position from a similar client running in
 		dir, prefixing all song locations with prefix.
 		"""
 		playlist = (yield self.get(dir + "/playlist"))
 		current_pos = (yield self.get(dir + "/current_pos"))
-		self.playlist_set(map(prefix.__add__, playlist))
+		self.playlist_set([self.file_prefix(prefix, f_name) for f_name in playlist])
 		self.current_pos_set(current_pos)
 
 
