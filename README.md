@@ -1,3 +1,5 @@
+![SHET Logo](https://github.com/18sg/SHET/raw/master/doc/logo.png)
+
 SHET House Event Tunneling
 ==========================
 
