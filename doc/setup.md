@@ -39,38 +39,6 @@ Included clients default to connecting to `localhost`. If you want to use a diff
 
 	export SHET_HOST="104.97.120.33"
 
-### HTTP Client
-
-The main purpose of the HTTP client is to make the command line client work. To start the HTTP client:
-
-	$ python2 src/clients/http.py
-
-This starts a http server on port 8080. It's probably easiest to run this on the same box as shetserv.
-
-### Command Line Client
-
-The command line client makes it easy to quickly interact with or script things on SHET without writing a client. It connects to SHET via the HTTP interface to avoid the overhead of loading twisted. You can set the host and port of the HTTP server with something like this:
-
-	export SHET_HTTP_URL="http://my_server:8080/"
-
-If you want to enable auto completion for SHET paths, put this in your `.bashrc`:
-
-	source shet_complete
-
-You should then be able to use the `shet` command.
-
-#### Usage
-
-To call an action, watch an event or get a property:
-
-	$ shet /foo/bar
-
-Append any arguments for calling actions to the end of the command &mdash; they should be interpreted in a reasonably sensible way.
-
-To set a property to 42:
-
-	$ shet set /foo/bar 42
-
 ### MPD Client
 
 To expose [MPD](http://mpd.wikia.com/) to SHET:
