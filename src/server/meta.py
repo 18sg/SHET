@@ -9,6 +9,9 @@ class MetaShet(ShetClient):
 		ShetClient.__init__(self)
 		self.server = server
 		self.server.fs.on_change = self.add_event("on_tree_change")
+		self.server.fs.on_raise = self.add_event("on_raise")
+		self.server.fs.on_eventcreated = self.add_event("on_eventcreated")
+		self.server.fs.on_eventdeleted = self.add_event("on_eventdeleted")
 	
 	
 	@shet_action("ls-r")

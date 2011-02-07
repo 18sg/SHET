@@ -1,6 +1,8 @@
 import os.path
 from collections import defaultdict
 
+def is_meta(path):
+	return path.startswith("/meta/")
 
 class DirectoryTree(dict):
 	
@@ -140,6 +142,9 @@ class Event(Node):
 		Node.__init__(self, *args, **kwargs)
 		
 		self.watchers = []
+		
+		if not is_meta(self.path):
+			self.fs.on_eventcreated(self.path)
 
 	def watch(self, watcher):
 		if watcher not in self.watchers:
@@ -150,10 +155,16 @@ class Event(Node):
 		self.watchers.remove(watcher)
 
 	def _raise(self, *args):
+		if not is_meta(self.path):
+			self.fs.on_raise(self.path, *args)
+		
 		for watcher in self.watchers:
 			watcher.send_event(self.path, *args)
 
 	def delete(self):
+		if not is_meta(self.path):
+			self.fs.on_eventdeleted(self.path)
+		
 		Node.delete(self)
 
 		for watcher in self.watchers:
