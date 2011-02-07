@@ -188,5 +188,8 @@ class Action(Node):
 	type = "action"
 
 	def call(self, *args):
+		if not is_meta(self.path):
+			self.fs.on_call(self.path, *args)
+		
 		return self.owner.send_docall(self.path, *args)
 
