@@ -118,9 +118,22 @@ class Property(Node):
 	type = "prop"
 
 	def get(self):
-		return self.owner.send_get(self.path)
+		
+		def on_value(value):
+			self.fs.on_get(self.path, value)
+			return value
+		
+		d = self.owner.send_get(self.path)
+		
+		if not is_meta(self.path):
+			d.addCallback(on_value)
+		
+		return d
 
 	def set(self, value):
+		if not is_meta(self.path):
+			self.fs.on_set(self.path, value)
+		
 		return self.owner.send_set(self.path, value)
 
 		

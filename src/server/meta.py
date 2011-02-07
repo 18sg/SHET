@@ -12,6 +12,8 @@ class MetaShet(ShetClient):
 		self.server.fs.on_raise = self.add_event("on_raise")
 		self.server.fs.on_eventcreated = self.add_event("on_eventcreated")
 		self.server.fs.on_eventdeleted = self.add_event("on_eventdeleted")
+		self.server.fs.on_set = self.add_event("on_set")
+		self.server.fs.on_get = self.add_event("on_get")
 	
 	
 	@shet_action("ls-r")
