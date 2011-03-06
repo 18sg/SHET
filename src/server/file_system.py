@@ -88,16 +88,14 @@ class FileSystem(object):
 		assert name, Exception("Must specify a file.")
 
 		self.get_node(path, True)[name] = node
-		if not is_meta(path):
-			self.on_change("add", full_path)
+		self.on_change("add", full_path)
 
 
 	def remove(self, path):
 		parts = self.split_path(path)
 		
 		del self.get_node(self.join_path(parts[:-1]))[parts[-1]]
-		if not is_meta(path):
-			self.on_change("remove", path)
+		self.on_change("remove", path)
 	
 	def on_change(self, action, path):
 		pass
