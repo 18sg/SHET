@@ -60,6 +60,10 @@ class MetaShet(ShetClient):
 	
 	@make_sync
 	def on_tree_change(self, change_type, loc):
+		# XXX: This shouldn't happen
+		if not loc.startswith("/"):
+			loc = "/%s"%loc
+		
 		if not is_meta(loc):
 			if change_type == "add":
 				type = (yield self.call("/meta/type", loc))
