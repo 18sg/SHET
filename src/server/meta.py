@@ -105,9 +105,9 @@ class MetaShet(ShetClient):
 	
 	
 	def on_raise(self, path, *args):
-		self.meta_action[path](*args)
-	def on_call(self, path, *args):
 		self.meta_event[path](*args)
+	def on_call(self, path, *args):
+		self.meta_action[path](*args)
 	def on_get(self, path, *args):
 		self.meta_property[path][0](*args)
 	def on_set(self, path, *args):
