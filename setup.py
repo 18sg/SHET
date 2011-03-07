@@ -10,4 +10,4 @@ setup(
     url='http://github.com/18sg/SHET',
     package_dir = {'shet': 'src'},
     packages=['shet', 'shet.server', 'shet.client'],
-    scripts=['scripts/shetserv', 'scripts/shet', 'scripts/shet_complete'])
+    scripts=['scripts/shetserv'])

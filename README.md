@@ -1,3 +1,5 @@
+![SHET Logo](https://github.com/18sg/SHET/raw/master/doc/logo.png)
+
 SHET House Event Tunneling
 ==========================
 
@@ -48,6 +50,10 @@ The SHET protocol is based on [JSON](http://json.org/), and as such all values i
 
 Other Projects
 --------------
+
+[SHETCClient](https://github.com/18sg/SHETCClient) provides a command line tool for accessing SHET (with tab completion!).
+
+[SHETC](https://github.com/18sg/SHETC) provides a C library for SHET.
 
 If you would like to connect SHET to the physical world, you might want to take a look at [SHETSource](https://github.com/18sg/SHETSource).
 

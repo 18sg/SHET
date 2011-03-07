@@ -1,6 +1,8 @@
 import os.path
 from collections import defaultdict
 
+def is_meta(path):
+	return path.startswith("/meta/")
 
 class DirectoryTree(dict):
 	
@@ -116,9 +118,22 @@ class Property(Node):
 	type = "prop"
 
 	def get(self):
-		return self.owner.send_get(self.path)
+		
+		def on_value(value):
+			self.fs.on_get(self.path, value)
+			return value
+		
+		d = self.owner.send_get(self.path)
+		
+		if not is_meta(self.path):
+			d.addCallback(on_value)
+		
+		return d
 
 	def set(self, value):
+		if not is_meta(self.path):
+			self.fs.on_set(self.path, value)
+		
 		return self.owner.send_set(self.path, value)
 
 		
@@ -140,6 +155,9 @@ class Event(Node):
 		Node.__init__(self, *args, **kwargs)
 		
 		self.watchers = []
+		
+		if not is_meta(self.path):
+			self.fs.on_eventcreated(self.path)
 
 	def watch(self, watcher):
 		if watcher not in self.watchers:
@@ -150,10 +168,16 @@ class Event(Node):
 		self.watchers.remove(watcher)
 
 	def _raise(self, *args):
+		if not is_meta(self.path):
+			self.fs.on_raise(self.path, *args)
+		
 		for watcher in self.watchers:
 			watcher.send_event(self.path, *args)
 
 	def delete(self):
+		if not is_meta(self.path):
+			self.fs.on_eventdeleted(self.path)
+		
 		Node.delete(self)
 
 		for watcher in self.watchers:
@@ -164,5 +188,8 @@ class Action(Node):
 	type = "action"
 
 	def call(self, *args):
+		if not is_meta(self.path):
+			self.fs.on_call(self.path, *args)
+		
 		return self.owner.send_docall(self.path, *args)
 
