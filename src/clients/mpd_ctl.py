@@ -33,7 +33,7 @@ class MpdClient(ShetClient):
 		ShetClient.__init__(self)
 		
 		commands = """next prev pause play toggle stop clear seek move
-		              volume repeat random single consume findadd""".split()
+		              volume repeat random single consume findadd update""".split()
 		
 		# Because closures in python are... a bit nutty.
 		def make_command(name):
