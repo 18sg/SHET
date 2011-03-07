@@ -9,5 +9,5 @@ setup(
     author='The UHG Guys',
     url='http://github.com/18sg/SHET',
     package_dir = {'shet': 'src'},
-    packages=['shet', 'shet.server', 'shet.client'],
+    packages=['shet', 'shet.server', 'shet.client', 'shet.path'],
     scripts=['scripts/shetserv'])
