@@ -86,8 +86,11 @@ class FileSystem(object):
 		path, name = os.path.split(full_path)
 		
 		assert name, Exception("Must specify a file.")
-
-		self.get_node(path, True)[name] = node
+		
+		directory = self.get_node(path, True)
+		assert name not in directory, Exception(
+			"Path %s already exists." % full_path)
+		directory[name] = node
 		self.on_change("add", full_path)
 
 
