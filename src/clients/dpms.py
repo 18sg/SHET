@@ -4,13 +4,12 @@ import subprocess
 
 class DpmsClient(ShetClient):
 	
-	
 	def __init__(self, action_path):
 		ShetClient.__init__(self)
 		
 		self.add_action(action_path, self.dpms)
 	
-	def dpms(self, state):
+	def dpms(self, state=True):
 		subprocess.call(["xset", "dpms", "force", "on" if state else "off"])
 
 
