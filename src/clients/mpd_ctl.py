@@ -4,9 +4,14 @@ from twisted.internet import threads
 import sys
 import subprocess
 import mpd
+import string
 
 mpd_host = "localhost"
 mpd_port = 6600
+
+def compose(f, g):
+    return lambda *args, **kws: f(g(*args, **kws))
+
 
 def with_mpd(f):
 	"""Connect to mpd before enterning the function, and disconnect afterwards"""
@@ -107,6 +112,34 @@ class MpdClient(ShetClient):
 		current_pos = (yield self.get(dir + "/current_pos"))
 		self.playlist_set([self.file_prefix(prefix, f_name) for f_name in playlist])
 		self.current_pos_set(current_pos)
+	
+	@shet_action
+	@with_mpd
+	def current_song_length(self):
+		"""Get the current song length."""
+		status = self.mpd_client.status()
+		return int(status["time"].split(':')[1]) if "time" in status else None
+	
+	@shet_action
+	@with_mpd
+	def current_song_pos(self):
+		"""get the current sing position."""
+		status = self.mpd_client.status()
+		return int(status["time"].split(':')[0]) if "time" in status else None
+	
+	@shet_action
+	def current(self, format=None):
+		"""Get the current song details, possibly in an arbitrary format.
+		See the mpc man page for details on the format string.
+		"""
+		if format is None:
+			return threads.deferToThread(
+				compose(string.strip, subprocess.check_output),
+				["mpc", "current"])
+		else:
+			return threads.deferToThread(
+				compose(string.strip, subprocess.check_output),
+				["mpc", "-f", format, "current"])
 
 
 if __name__ == "__main__":
