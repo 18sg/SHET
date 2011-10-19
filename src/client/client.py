@@ -401,6 +401,20 @@ class ShetClient(ReconnectingClientFactory):
 			self.set_queue.append((path, value, d))
 			return d
 
+	def act(self, path, *args):
+		"""Either call an action, or set a property.
+		If the path starts with "action:", it is called as an action.
+		If the path starts with "property:", it is set as a property.
+		Otherwise, it is assumed to be an action.
+		"""
+		if path.startswith("action:"):
+			path = path.partition(":")[2].strip()
+			self.call(path, *args)
+		elif path.startswith("property:"):
+			path = path.partition(":")[2].strip()
+			self.set(path, *args)
+		else:
+			self.call(path, *args)
 
 	def _raise(self, path, *args):
 		if self.client is not None:

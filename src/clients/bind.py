@@ -54,7 +54,7 @@ class Bind(ShetClient):
 			if not persistant:
 				self.unwatch_event(self.bindings.pop(binding))
 				self.store_bindings()
-			self.call(action, *args)
+			self.act(action, *args)
 		
 		watcher = self.watch_event(event, on_event)
 		# Inject a variable to make ls more informative. You didn't see that...
