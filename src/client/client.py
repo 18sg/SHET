@@ -139,6 +139,10 @@ class ShetClientProtocol(ShetProtocol):
 	def send_call(self, path, *args):
 		return self.send_command_with_callback(commands.call, path, *args)
 
+	@command(commands.ping)
+	def cmd_ping(self, *args):
+		return args
+
 	@command(commands.getprop)
 	def cmd_getprop(self, path):
 		return self.factory._get_property(path)
