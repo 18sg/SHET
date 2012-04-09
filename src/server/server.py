@@ -33,6 +33,9 @@ class ShetServerProtocol(ShetProtocol):
 		for node in self.fs_nodes:
 			node.delete()
 
+	@command(commands.ping)
+	def cmd_ping(self, *args):
+		return args
 
 	@command(commands.mkprop)
 	def cmd_mkprop(self, path):
