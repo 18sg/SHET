@@ -9,6 +9,7 @@ import os
 import os.path
 from types import MethodType
 import collections
+import uuid
 
 
 class Decorator(object):
@@ -46,8 +47,43 @@ class shet_property(Decorator):
 		return f
 
 
+class PingingShetProtocol(ShetProtocol):
+	"""A SHET protocol that pings the server every factory.ping_interval seconds.
+	If the last ping does not return by the time the next one is scheduled, the
+	connection is dropped.
+	"""
 
-class ShetClientProtocol(ShetProtocol):
+	def connectionMade(self):
+		# Make do_ping think it was successfull the last time the first time it is
+		# called.
+		self.ping_returned = True
+		self.ping_timer = reactor.callLater(self.factory.ping_interval, self.do_ping)
+
+	def connectionLost(self, reason):
+		if self.ping_timer.active():
+			self.ping_timer.cancel()
+
+	def on_ping_return(self, *args):
+		"""Called when a ping is returned from the server."""
+		self.ping_returned = True
+
+	def do_ping(self):
+		"""Check the status of the last ping. If it returned, ping again and set up
+		another delayed call. If it didn't return, drop the connection.
+		"""
+		if self.ping_returned:
+			d = self.send_ping()
+			d.addCallbacks(self.on_ping_return, self.on_ping_return)
+			self.ping_timer = reactor.callLater(self.factory.ping_interval, self.do_ping)
+		else:
+			self.transport.loseConnection()
+
+	def send_ping(self, *args):
+		"""Send a ping to the server, returning a deferred."""
+		return self.send_command_with_callback(commands.ping, *args)
+
+
+class ShetClientProtocol(PingingShetProtocol):
 	"""The low-level SHET client protocol.
 	This must be used with the ShetClient as a factory - use that to
 	implement clients.
@@ -57,8 +93,12 @@ class ShetClientProtocol(ShetProtocol):
 		and send all queued items.
 		"""
 		self.factory.resetDelay()
+		PingingShetProtocol.connectionMade(self)
 		self.factory.client = self
 		self.factory.on_connect()
+		
+		self.send_register(self.factory.connection_id)
+		
 		# Set up properties
 		for prop_path in self.factory.properties:
 			self.send_mkprop(prop_path)
@@ -98,10 +138,14 @@ class ShetClientProtocol(ShetProtocol):
 
 	def connectionLost(self, reason):
 		"""Called on disconnect."""
+		PingingShetProtocol.connectionLost(self, reason)
 		self.factory.client = None
 		self.factory.on_disconnect()
 
 	# Lots of boring code.
+
+	def send_register(self, connection_id):
+		return self.send_command_with_callback(commands.register, connection_id)
 
 	# Properties
 	def send_mkprop(self, path):
@@ -138,6 +182,10 @@ class ShetClientProtocol(ShetProtocol):
 
 	def send_call(self, path, *args):
 		return self.send_command_with_callback(commands.call, path, *args)
+
+	@command(commands.ping)
+	def cmd_ping(self, *args):
+		return args
 
 	@command(commands.getprop)
 	def cmd_getprop(self, path):
@@ -185,7 +233,12 @@ class ShetClient(ReconnectingClientFactory):
 	# Maximum reconnection delay.
 	maxDelay = 5
 	
+	# Time between sending pings to the server.
+	ping_interval = 30
+	
 	def __init__(self):
+		self.connection_id = str(uuid.uuid1())
+		
 		self.properties = {}
 		self.events = {}
 		self.watched_events = collections.defaultdict(list)

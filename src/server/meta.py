@@ -41,4 +41,23 @@ class MetaShet(ShetClient):
 	@shet_action
 	def type(self, loc='/'):
 		return self.server.fs.get_node(loc).type
-
+	
+	@shet_action("connections/list")
+	def list_connections(self):
+		"""Get a dictionary mapping from connection id to a list of paths owned by
+		that connection.
+		"""
+		return dict((conn.connection_id,
+		             [node.path for node in conn.fs_nodes])
+		            for conn
+		            in self.server.connections)
+	
+	@shet_action("connections/disconnect")
+	def disconnect_connection(self, connection_id):
+		"""Disconnect a connection given it's id."""
+		self.server.disconnect_id(connection_id)
+	
+	@shet_action("connections/owner")
+	def find_owner(self, path):
+		"""Get the id of the connection that registered the given path."""
+		return self.server.fs.get_node(path).owner.connection_id
