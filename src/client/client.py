@@ -9,6 +9,7 @@ import os
 import os.path
 from types import MethodType
 import collections
+import uuid
 
 
 class Decorator(object):
@@ -59,6 +60,9 @@ class ShetClientProtocol(ShetProtocol):
 		self.factory.resetDelay()
 		self.factory.client = self
 		self.factory.on_connect()
+		
+		self.send_register(self.factory.connection_id)
+		
 		# Set up properties
 		for prop_path in self.factory.properties:
 			self.send_mkprop(prop_path)
@@ -102,6 +106,9 @@ class ShetClientProtocol(ShetProtocol):
 		self.factory.on_disconnect()
 
 	# Lots of boring code.
+
+	def send_register(self, connection_id):
+		return self.send_command_with_callback(commands.register, connection_id)
 
 	# Properties
 	def send_mkprop(self, path):
@@ -190,6 +197,8 @@ class ShetClient(ReconnectingClientFactory):
 	maxDelay = 5
 	
 	def __init__(self):
+		self.connection_id = str(uuid.uuid1())
+		
 		self.properties = {}
 		self.events = {}
 		self.watched_events = collections.defaultdict(list)
