@@ -30,6 +30,12 @@ Commands
 
 A message with the same unique_id as the request and the command return and a status which is 0 for success and otherwise failure.
 
+#### ping (any direction)
+
+	["unique_id", "ping", *arguments]
+
+Simply returns a list containing the arguments.
+
 ### Properties
 
 #### mkprop (to server)
