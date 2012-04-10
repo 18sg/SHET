@@ -36,6 +36,17 @@ A message with the same unique_id as the request and the command return and a st
 
 Simply returns a list containing the arguments.
 
+#### register (to server)
+
+	["unique_id", "register", "connection id"]
+
+This names a connection; any other connections with this name are disconnected.
+This is designed to make reconnection a bit smoother -- if the connection has
+not yet timed out, then the server may still think the client is connected,
+causing all sorts of nasty naming collisions when it tries to reconnect. Client
+libraries are advised to create a random connection id at start up, and use that
+across reconnections.
+
 ### Properties
 
 #### mkprop (to server)
