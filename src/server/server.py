@@ -8,6 +8,7 @@ from shet.command_runner import command
 
 from shet.server import file_system
 
+import uuid
 
 class ShetServerProtocol(ShetProtocol):
 
@@ -15,6 +16,7 @@ class ShetServerProtocol(ShetProtocol):
 		self.factory.connections.append(self)
 		self.connected = True
 		self.on_connection_lost = Deferred()
+		self.connection_id = str(uuid.uuid1())
 
 		self.fs_nodes = []
 		self.watches = set()
@@ -36,6 +38,14 @@ class ShetServerProtocol(ShetProtocol):
 	@command(commands.ping)
 	def cmd_ping(self, *args):
 		return args
+
+	@command(commands.register)
+	def cmd_register(self, connection_id):
+		"""Set the connection id of this connection. This closes all other
+		connections with the same id, so it must be unique.
+		"""
+		self.factory.disconnect_id(connection_id)
+		self.connection_id = connection_id
 
 	@command(commands.mkprop)
 	def cmd_mkprop(self, path):
@@ -156,3 +166,9 @@ class ShetServerFactory(Factory):
 	def __init__(self):
 		self.connections = []
 		self.fs = file_system.FileSystem()
+
+	def disconnect_id(self, connection_id):
+		"""Close all connections with this connection id."""
+		for connection in self.connections:
+			if connection.connection_id == connection_id:
+				connection.transport.loseConnection()
