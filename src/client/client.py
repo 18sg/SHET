@@ -492,7 +492,7 @@ class ShetClient(ReconnectingClientFactory):
 		@param port the port to use; defaults to $SHET_PORT or 11235
 		"""
 		address = address or os.getenv("SHET_HOST") or "localhost"
-		port = port or os.getenv("SHET_PORT") or 11235
+		port = port or int(os.getenv("SHET_PORT")) or 11235
 		reactor.connectTCP(address, port, self)
 
 	def run(self, address=None, port=None):
