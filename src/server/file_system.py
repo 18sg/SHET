@@ -1,4 +1,4 @@
-import os.path
+from shet import path as shetpath
 from collections import defaultdict
 
 def is_meta(path):
@@ -74,16 +74,16 @@ class FileSystem(object):
 		else:
 			for name, sub_node in node.iteritems():
 				if isinstance(sub_node, DirectoryTree):
-					for sub_path in self.list_full_paths(os.path.join(path,
+					for sub_path in self.list_full_paths(shetpath.join(path,
 					                                                  name)):
-						yield os.path.join(name,
+						yield shetpath.join(name,
 						                   sub_path)
 				else:
 					yield name
 				
 			
 	def add(self, full_path, node):
-		path, name = os.path.split(full_path)
+		path, name = shetpath.split(full_path)
 		
 		assert name, Exception("Must specify a file.")
 		
