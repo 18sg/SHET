@@ -5,8 +5,8 @@ from twisted.internet import reactor
 from shet import commands
 from shet import ShetProtocol
 from shet.command_runner import command
+from shet import path as shetpath
 import os
-import os.path
 from types import MethodType
 import collections
 import uuid
@@ -292,7 +292,7 @@ class ShetClient(ReconnectingClientFactory):
 		if path.startswith('/'):
 			return path
 		else:
-			return os.path.join(self.root, path)
+			return shetpath.join(self.root, path)
 
 
 	def add_property(self, path, set_callback, get_callback):
@@ -492,7 +492,7 @@ class ShetClient(ReconnectingClientFactory):
 		@param port the port to use; defaults to $SHET_PORT or 11235
 		"""
 		address = address or os.getenv("SHET_HOST") or "localhost"
-		port = port or os.getenv("SHET_PORT") or 11235
+		port = int(port or os.getenv("SHET_PORT") or 11235)
 		reactor.connectTCP(address, port, self)
 
 	def run(self, address=None, port=None):

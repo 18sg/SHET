@@ -1,4 +1,4 @@
-import os.path
+from shet import path as shetpath
 from collections import defaultdict
 
 def is_meta(path):
@@ -12,13 +12,11 @@ class DirectoryTree(dict):
 		dict.__init__(self)
 		self.parent = parent
 	
-	def add_get(self, key):
-		try:
-			return self[key]
-		except KeyError:
-			new_dir = DirectoryTree(self)
-			self[key] = new_dir
-			return new_dir
+	def get_add(self, key, add=True):
+		if add and key not in self:
+			self[key] = DirectoryTree(self)
+		
+		return self[key]
 	
 	def __delitem__(self, key):
 		dict.__delitem__(self, key)
@@ -42,12 +40,28 @@ class FileSystem(object):
 		return '/'.join(path)
 
 
-	def get_node(self, path, add=False):
-		parts = self.split_path(path)
-		if not parts:
-			return self.root
-		parent = self.get_node(self.join_path(parts[:-1]), add)
-		return parent.add_get(parts[-1]) if add else parent[parts[-1]]
+	def get_node(self, path):
+		"""Get a node with a given path."""
+		current = self.root
+		for part in self.split_path(path):
+			if not isinstance(current, DirectoryTree):
+				raise Exception("Cannot descend into %s." % current.type)
+			
+			current = current[part]
+		return current
+	
+	def get_dir(self, path):
+		"""Get a directory with a given path.
+		This possibly adds new directories, so it is important that something is
+		put into it so we don't leave empty directories around.
+		"""
+		current = self.root
+		for part in self.split_path(path):
+			if not isinstance(current, DirectoryTree):
+				raise Exception("Cannot descend into %s." % current.type)
+			
+			current = current.get_add(part)
+		return current
 
 	
 	def simplify_node(self, node, recursive=True):
@@ -74,20 +88,20 @@ class FileSystem(object):
 		else:
 			for name, sub_node in node.iteritems():
 				if isinstance(sub_node, DirectoryTree):
-					for sub_path in self.list_full_paths(os.path.join(path,
+					for sub_path in self.list_full_paths(shetpath.join(path,
 					                                                  name)):
-						yield os.path.join(name,
+						yield shetpath.join(name,
 						                   sub_path)
 				else:
 					yield name
 				
 			
 	def add(self, full_path, node):
-		path, name = os.path.split(full_path)
+		path, name = shetpath.split(full_path)
 		
 		assert name, Exception("Must specify a file.")
 		
-		directory = self.get_node(path, True)
+		directory = self.get_dir(path)
 		assert name not in directory, Exception(
 			"Path %s already exists." % full_path)
 		directory[name] = node
@@ -95,9 +109,9 @@ class FileSystem(object):
 
 
 	def remove(self, path):
-		parts = self.split_path(path)
+		head, tail = shetpath.split(path)
 		
-		del self.get_node(self.join_path(parts[:-1]))[parts[-1]]
+		del self.get_node(head)[tail]
 		self.on_change("remove", path)
 	
 	def on_change(self, action, path):
