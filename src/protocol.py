@@ -14,6 +14,8 @@ class ShetProtocol(LineReceiver,
                    IdGeneratorMixin,
                    CommandRunnerMixin):
 
+	MAX_LENGTH = 1048576
+
 	def __init__(self, *args, **kwargs):
 		CommandRunnerMixin.__init__(self)
 		self.waiting_for_return = {}
