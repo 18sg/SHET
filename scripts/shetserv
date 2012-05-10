@@ -5,17 +5,26 @@ def main(args):
 	from shet.server.meta import MetaShet
 	from twisted.internet import reactor
 	from twisted.internet.endpoints import serverFromString
-	from twisted.protocols.loopback import loopbackAsync
+	import tempfile
 	
 	# Create a SHET server.
 	shet_factory = ShetServerFactory()
 	
+	# shet_factory.fs.on_change       = lambda *args: None
+	# shet_factory.fs.on_raise        = lambda *args: None
+	# shet_factory.fs.on_eventcreated = lambda *args: None
+	# shet_factory.fs.on_eventdeleted = lambda *args: None
+	# shet_factory.fs.on_set          = lambda *args: None
+	# shet_factory.fs.on_get          = lambda *args: None
+	# shet_factory.fs.on_call         = lambda *args: None
+	
 	def finish_setup(err):
 		"""Connect a meta client to the server and run the reactor."""
-		meta_shet_factory = MetaShet(shet_factory)
-		loopbackAsync(
-				shet_factory.buildProtocol(None),
-				meta_shet_factory.buildProtocol(None))
+		# Make the server listen on a random UNIX socket...
+		sock_path = tempfile.mktemp()
+		reactor.listenUNIX(sock_path, shet_factory)
+		# ...and the meta client to it.
+		reactor.connectUNIX(sock_path, MetaShet(shet_factory))
 		
 		reactor.run()
 	
