@@ -58,6 +58,7 @@ class ShetServerProtocol(ShetProtocol):
 		node = self.factory.fs.get_node(path)
 		assert node.owner == self
 		node.delete()
+		self.fs_nodes.remove(node)
 
 	@command(commands.get)
 	def cmd_get(self, path):
@@ -98,6 +99,7 @@ class ShetServerProtocol(ShetProtocol):
 		node = self.factory.fs.get_node(path)
 		assert node.owner == self
 		node.delete()
+		self.fs_nodes.remove(node)
 
 	@command(commands._raise)
 	def cmd_raise(self, path, *args):
@@ -132,6 +134,7 @@ class ShetServerProtocol(ShetProtocol):
 		node = self.factory.fs.get_node(path)
 		assert node.owner == self
 		node.delete()
+		self.fs_nodes.remove(node)
 
 	@command(commands.call)
 	def cmd_call(self, path, *args):
