@@ -10,6 +10,15 @@ class MakeSyncTests(unittest.TestCase):
         def f():
             return 5
         return f().addCallback(self.assertEqual, 5)
+    
+    def test_return_deferred(self):
+        a_d = defer.Deferred()
+        @make_sync
+        def f():
+            return a_d
+        d = f().addCallback(self.assertEqual, 2)
+        a_d.callback(2)
+        return d
 
     def test_yield_no_defer(self):
         @make_sync

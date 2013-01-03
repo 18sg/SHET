@@ -28,6 +28,11 @@ def make_sync(f):
             finished.errback(e)
             return finished
         
+        # If the decorator was used when it wasn't needed, it may well return a
+        # deferred, which should not be passed through another deferred.
+        if isinstance(gen, defer.Deferred):
+            return gen
+        
         # If the function did not return a generator, return straight away.
         if not (hasattr(gen, "next") and hasattr(gen, "send")):
             finished.callback(gen)
