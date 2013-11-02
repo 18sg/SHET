@@ -295,19 +295,18 @@ class ShetClient(ReconnectingClientFactory):
 			return shetpath.join(self.root, path)
 
 
-	def add_property(self, path, set_callback, get_callback):
+	def add_property(self, path, get_callback, set_callback):
 		"""Create a property.
 		@param path         The path of the property.
+		@param get_callback Function called with no args to get 
+		                    the value of the property.
 		@param set_callback Function called with a single argument to
 		                    set the property.
-				    May return a Deferred or any value.
-		@param get_callback Function called with no args to get 
-		                    the resending
 		@return Object representing the property.
 		        Pass to remove_property() to remove.
 		"""
 		path = self.relative_path(path)
-		prop = Property(path, set_callback, get_callback)
+		prop = Property(path, get_callback, set_callback)
 		self.properties[path] = prop
 		if self.client is not None:
 			self.client.send_mkprop(path)
