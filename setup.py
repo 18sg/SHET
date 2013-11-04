@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name='SHET',
-    version='1.0.1',
+    version='1.0.2',
     description='SHET House Event Tunnelling',
     author='Thomas Nixon, Jonathan Heathcote',
     author_email='shet@tomn.co.uk',
