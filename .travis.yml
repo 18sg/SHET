@@ -7,3 +7,12 @@ install:
   - pip install -r requments_dev.txt
 script: trial test
 
+deploy:
+  provider: pypi
+  user: tomn
+  password:
+    secure: XrwRHAec3piX3yKRWAIgWcr3SNDDWwpp3gvwOUlDsYl3GBMsgJOvWc4yFom6Uwx8KVdjeGuFhBjvcUOaqX+cue3K/8TZzm/CWYuDZj1JoJq6wgVrhYzeNzHu1GdF36TtHr5V3kC9THaImmbge/lGWGGWP/Hl6FTIPFUqCI9+bfU=
+  on:
+    tags: true
+    repo: 18sg/SHET
+
