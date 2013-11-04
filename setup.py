@@ -10,5 +10,6 @@ setup(
     author_email='shet@tomn.co.uk',
     url='http://github.com/18sg/SHET',
     package_dir = {'shet': 'src'},
+    install_requires=["twisted"],
     packages=['shet', 'shet.server', 'shet.client', 'shet.path'],
     scripts=['scripts/shetserv'])
