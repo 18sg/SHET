@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name='SHET',
@@ -9,7 +9,6 @@ setup(
     author='Thomas Nixon, Jonathan Heathcote',
     author_email='shet@tomn.co.uk',
     url='http://github.com/18sg/SHET',
-    package_dir = {'shet': 'src'},
     install_requires=["twisted"],
-    packages=['shet', 'shet.server', 'shet.client', 'shet.path'],
+    packages=find_packages(),
     scripts=['scripts/shetserv'])
