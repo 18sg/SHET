@@ -10,5 +10,5 @@ setup(
     author_email='shet@tomn.co.uk',
     url='http://github.com/18sg/SHET',
     install_requires=["twisted"],
-    packages=find_packages(),
+    packages=find_packages(exclude=["test"]),
     scripts=['scripts/shetserv'])
